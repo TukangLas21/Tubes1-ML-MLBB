@@ -1,6 +1,7 @@
 import os
 import math
 from abc import ABC, abstractmethod
+import numpy as np
 
 # activation function using strategy pattern
 
@@ -22,6 +23,9 @@ class Linear(ActivationFunction):
     self.x = x
     
     return x
+  
+  def backward(self, gradient_output):
+    return gradient_output * np.ones_like(self.x)
 
 
 class Sigmoid(ActivationFunction):
@@ -30,6 +34,9 @@ class Sigmoid(ActivationFunction):
     
     return 1 / (1 + math.exp(-x))
   
+  def backward(self, gradient_output):
+    return gradient_output * self.forward(self.x) * (1 - self.forward(self.x))
+  
   
 class ReLU(ActivationFunction):
   def forward(self, x):
@@ -37,12 +44,18 @@ class ReLU(ActivationFunction):
     
     return max(0, x)
   
+  def backward(self, gradient_output):
+    return gradient_output * (self.x > 0)
+  
   
 class Tanh(ActivationFunction):
   def forward(self, x):
     self.x = x
     
     return math.tanh(x)
+  
+  def backward(self, gradient_output):
+    return gradient_output * ((2 / math.exp(self.x) - math.exp(-self.x)) ** 2)
   
   
 class Softmax(ActivationFunction):
@@ -53,5 +66,8 @@ class Softmax(ActivationFunction):
     sum_exp_x = sum(exp_x)
     
     return [i / sum_exp_x for i in exp_x]
+  
+  def backward(self, gradient_output):
+    pass # fck kok ribet bgt
   
   
