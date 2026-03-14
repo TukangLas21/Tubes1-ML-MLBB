@@ -5,5 +5,5 @@
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-.\.venv\Scripts\python -m pip install -r requirements.txtt
+.\.venv\Scripts\python -m pip install -r requirements.txt
 ```
