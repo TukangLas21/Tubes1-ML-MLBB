@@ -12,7 +12,6 @@ class ActivationFunction(ABC):
     def derivative(z):
         pass
 
-# contoh
 class Linear(ActivationFunction):
     @staticmethod
     def activate(z):
@@ -21,3 +20,13 @@ class Linear(ActivationFunction):
     @staticmethod
     def derivative(z):
         return np.ones_like(z)
+
+# TODO: Implement
+class Softmax(ActivationFunction):
+    @staticmethod
+    def activate(z):
+        return 0
+
+    @staticmethod
+    def derivative(z):
+        return 0
