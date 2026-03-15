@@ -47,7 +47,7 @@ class ReLU(ActivationFunction):
   def backward(self, gradient_output):
     return gradient_output * (self.x > 0)
   
-  
+# ngikut spek
 class Tanh(ActivationFunction):
   def forward(self, x):
     self.x = x
@@ -68,6 +68,8 @@ class Softmax(ActivationFunction):
     return [i / sum_exp_x for i in exp_x]
   
   def backward(self, gradient_output):
-    pass # fck kok ribet bgt
+    softmax_output = np.array(self.forward(self.x))
+    jacobian_matrix = np.diagflat(softmax_output) - np.outer(softmax_output, softmax_output)
+    return jacobian_matrix @ gradient_output
   
   

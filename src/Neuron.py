@@ -15,15 +15,16 @@ class Neuron:
     return np.dot(self.weights, self.inputs) + self.bias
   
   def forward(self):
-    return self.activation_function.forward(self.compute_net_input())
+    return self.activation_function.forward()
   
   def backward(self, output_gradient):
-    activation_gradient = self.activation_function.backward(self.compute_net_input)
+    activation_gradient = self.activation_function.backward(output_gradient)
     self.gradient_weights = activation_gradient * self.inputs
     self.gradient_bias = activation_gradient
     return output_gradient * activation_gradient * self.weights
   
+  # ngikut tutorial razi
   def update_parameters(self):
-    self.weights += self.learning_rate * self.gradient_weights
-    self.bias += self.learning_rate * self.gradient_bias
+    self.weights -= self.learning_rate * self.gradient_weights
+    self.bias -= self.learning_rate * self.gradient_bias
   
