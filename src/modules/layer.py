@@ -25,14 +25,21 @@ class Layer:
         self.a = self.activation_fn.activate(self.z)
         return self.a
 
-    def backward(self, d_a):
-        if isinstance(self.activation_fn, Softmax):
-            dz = 0 # TODO: Implement softmax backward (requires special handling)
+    # use_combined: softmax + cce
+    def backward(self, d_a, use_combined=False):
+        if use_combined:
+            dz = d_a # TODO (verif): harusnya gini klo softmax dgn syarat lossnya CCE
+        elif isinstance(self.activation_fn, Softmax):
+            jacobian_matrices = type(self.activation_fn).derivative(self.z)
+            dz = np.zeros_like(d_a)
+            
+            for i in range(d_a.shape[0]):
+                dz[i] = np.dot(jacobian_matrices[i], d_a[i])
         else:
             dz = d_a * type(self.activation_fn).derivative(self.z)
 
-        self.dW = np.dot(self.input.T, dz)
-        self.db = np.sum(dz, axis=0, keepdims=True)
+        self.dW = np.dot(self.input.T, dz) / self.input.shape[0]
+        self.db = np.sum(dz, axis=0, keepdims=True) / self.input.shape[0]
 
-        # Pass gradient to previous layer
+        # pass gradient to previous layer
         return np.dot(dz, self.W.T)

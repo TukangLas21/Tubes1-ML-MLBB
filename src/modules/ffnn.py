@@ -4,6 +4,8 @@ from tqdm import tqdm
 from modules.config import ModelConfig
 from modules.layer import Layer
 from modules.weightinit import Initializer
+from modules.activationfunction import Softmax
+from modules.lossfunction import CategoricalCrossEntropy
 
 class FFNN:
     def __init__(self, config: ModelConfig, initializer: Initializer):
@@ -27,8 +29,18 @@ class FFNN:
             x = layer.forward(x)
         return x
 
-    def backward(self, loss_grad):
-        grad = loss_grad
+    def backward(self, y_true, y_pred):
+        output_layer = self.layers[-1]
+        use_combined = isinstance(output_layer.activation_fn, Softmax) and isinstance(self.config.loss_fn, CategoricalCrossEntropy)
+        
+        # TODO: verif ini bener
+        if use_combined:
+            grad = (y_pred - y_true) / y_true.shape[0] # karena softmax + cce cancel out 
+            grad = output_layer.backward(grad, use_combined=True)
+        else:
+            grad = self.config.loss_fn.derivative(y_true, y_pred)
+            grad = output_layer.backward(grad)
+        
         for layer in reversed(self.layers):
             grad = layer.backward(grad)
 
@@ -53,10 +65,10 @@ class FFNN:
         np.random.seed(self.config.random_state)
         self.history = {'train_loss': [], 'val_loss': []}
 
-        n          = X_train.shape[0]
+        n = X_train.shape[0]
         batch_size = self.config.batch_size
-        epochs     = self.config.epochs
-        verbose    = self.config.verbose
+        epochs = self.config.epochs
+        verbose = self.config.verbose
 
         epoch_range = tqdm(range(epochs), desc='Training') if verbose == 1 else range(epochs)
 
@@ -73,8 +85,7 @@ class FFNN:
                 y_pred = self.forward(X_b)
                 batch_losses.append(self.config.loss_fn.loss(y_b, y_pred))
 
-                loss_grad = self.config.loss_fn.derivative(y_b, y_pred)
-                self.backward(loss_grad)
+                self.backward(y_b, y_pred)
                 self._update_weights()
 
             train_loss = float(np.mean(batch_losses))
