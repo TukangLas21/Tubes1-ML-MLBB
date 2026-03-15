@@ -41,7 +41,7 @@ class FFNN:
             grad = self.config.loss_fn.derivative(y_true, y_pred)
             grad = output_layer.backward(grad)
         
-        for layer in reversed(self.layers):
+        for layer in reversed(self.layers[:-1]): # exclude output layer
             grad = layer.backward(grad)
 
     def _update_weights(self):
