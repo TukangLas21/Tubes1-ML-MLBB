@@ -11,7 +11,7 @@ def plot_weight_distribution(model, layer_indices=None):
         axes = [axes]
 
     for ax, idx in zip(axes, layer_indices):
-        ax.hist(model.layers[idx].W.flatten(), bins=30, edgecolor='black')
+        ax.hist(model.layers[idx].W.data.flatten(), bins=30, edgecolor='black')
         ax.set_title(f'Layer {idx} — Weight Distribution')
         ax.set_xlabel('Weight')
         ax.set_ylabel('Count')
@@ -30,11 +30,12 @@ def plot_gradient_distribution(model, layer_indices=None):
         axes = [axes]
 
     for ax, idx in zip(axes, layer_indices):
-        if model.layers[idx].dW is None:
+        grad = model.layers[idx].W.grad
+        if grad is None:
             ax.set_title(f'Layer {idx} — No gradients yet')
             ax.axis('off')
             continue
-        ax.hist(model.layers[idx].dW.flatten(), bins=30, edgecolor='black')
+        ax.hist(grad.flatten(), bins=30, edgecolor='black')
         ax.set_title(f'Layer {idx} — Gradient Distribution')
         ax.set_xlabel('Gradient')
         ax.set_ylabel('Count')

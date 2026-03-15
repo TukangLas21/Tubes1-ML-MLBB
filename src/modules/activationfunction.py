@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import numpy as np
 
@@ -6,66 +8,66 @@ from modules.autograd import Tensor
 class ActivationFunction(ABC):
     @staticmethod
     @abstractmethod
-    def activate(z):
-        pass
+    def activate(z: Tensor) -> Tensor:
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def derivative(z):
-        pass
+    def derivative(z: Tensor) -> Tensor | np.ndarray:
+        raise NotImplementedError
 
 
 class Linear(ActivationFunction):
     @staticmethod
-    def activate(z):
+    def activate(z: Tensor) -> Tensor:
         return z
 
     @staticmethod
-    def derivative(z):
+    def derivative(z: Tensor) -> Tensor:
         return Tensor(np.ones_like(z.data))
     
     
 class Sigmoid(ActivationFunction):
     @staticmethod
-    def activate(z):
+    def activate(z: Tensor) -> Tensor:
         return z.sigmoid()
     
     @staticmethod
-    def derivative(z):
+    def derivative(z: Tensor) -> Tensor:
         forward_val = Sigmoid.activate(z)
         return forward_val * (Tensor(1) - forward_val)
     
     
 class ReLU(ActivationFunction):
     @staticmethod
-    def activate(z):
+    def activate(z: Tensor) -> Tensor:
         return z.relu()
 
     @staticmethod
-    def derivative(z):
+    def derivative(z: Tensor) -> np.ndarray:
         return (z.data > 0).astype(float)
     
     
 class Tanh(ActivationFunction):
     @staticmethod
-    def activate(z):
+    def activate(z: Tensor) -> Tensor:
         return z.tanh()
 
     @staticmethod
-    def derivative(z):
+    def derivative(z: Tensor) -> Tensor:
         return Tensor(1) - z.tanh() ** Tensor(2)
 
 
 class Softmax(ActivationFunction):
     @staticmethod
-    def activate(z):
+    def activate(z: Tensor) -> Tensor:
         return z.softmax()
 
     @staticmethod
-    def derivative(z):
-        softmax_output = Softmax.activate(z)
+    def derivative(z: Tensor) -> np.ndarray:
+        softmax_output = Softmax.activate(z).data
         if softmax_output.ndim == 1:
-            softmax_output = softmax_output.reshape(1, -1) 
+            softmax_output = softmax_output.reshape(1, -1)
         
         n, C = softmax_output.shape
         
