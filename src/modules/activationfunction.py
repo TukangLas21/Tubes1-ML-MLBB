@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
+from modules.autograd import Tensor
+
 class ActivationFunction(ABC):
     @staticmethod
     @abstractmethod
@@ -20,45 +22,44 @@ class Linear(ActivationFunction):
 
     @staticmethod
     def derivative(z):
-        return np.ones_like(z)
+        return Tensor(np.ones_like(z.data))
     
     
 class Sigmoid(ActivationFunction):
     @staticmethod
     def activate(z):
-        return 1 / (1 + np.exp(-z))
+        return z.sigmoid()
     
     @staticmethod
     def derivative(z):
         forward_val = Sigmoid.activate(z)
-        return forward_val * (1 - forward_val)
+        return forward_val * (Tensor(1) - forward_val)
     
     
 class ReLU(ActivationFunction):
     @staticmethod
     def activate(z):
-        return np.maximum(0, z)
+        return z.relu()
 
     @staticmethod
     def derivative(z):
-        return (z > 0)
+        return (z.data > 0).astype(float)
     
     
 class Tanh(ActivationFunction):
     @staticmethod
     def activate(z):
-        return np.tanh(z)
+        return z.tanh()
 
     @staticmethod
     def derivative(z):
-        return 1 - np.tanh(z) ** 2    
+        return Tensor(1) - z.tanh() ** Tensor(2)
 
 
 class Softmax(ActivationFunction):
     @staticmethod
     def activate(z):
-        exp_z = np.exp(z - np.max(z, axis=-1, keepdims=True))
-        return exp_z / np.sum(exp_z, axis=-1, keepdims=True)
+        return z.softmax()
 
     @staticmethod
     def derivative(z):
