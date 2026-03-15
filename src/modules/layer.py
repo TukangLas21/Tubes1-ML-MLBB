@@ -38,8 +38,8 @@ class Layer:
         else:
             dz = d_a * type(self.activation_fn).derivative(self.z)
 
-        self.dW = np.dot(self.input.T, dz)
-        self.db = np.sum(dz, axis=0, keepdims=True)
+        self.dW = np.dot(self.input.T, dz) / self.input.shape[0]
+        self.db = np.sum(dz, axis=0, keepdims=True) / self.input.shape[0]
 
         # pass gradient to previous layer
         return np.dot(dz, self.W.T)

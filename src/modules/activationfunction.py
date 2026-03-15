@@ -63,6 +63,9 @@ class Softmax(ActivationFunction):
     @staticmethod
     def derivative(z):
         softmax_output = Softmax.activate(z)
+        if softmax_output.ndim == 1:
+            softmax_output = softmax_output.reshape(1, -1) 
+        
         n, C = softmax_output.shape
         
         jacobian_matrices = np.zeros((n, C, C))

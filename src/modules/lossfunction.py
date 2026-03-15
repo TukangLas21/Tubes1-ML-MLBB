@@ -30,11 +30,12 @@ class BinaryCrossEntropy(LossFunction):
     @staticmethod
     def derivative(y_true, y_pred, epsilon=1e-15):
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-        return (y_pred - y_true) / y_true.shape[0]
+        return (1 / y_true.shape[0]) * (y_pred - y_true) / (y_pred * (1 - y_pred) + epsilon)
     
 class CategoricalCrossEntropy(LossFunction):
     @staticmethod
     def loss(y_true, y_pred):
+        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
         return -np.mean(np.sum(y_true * np.log(y_pred), axis=1))
     
     @staticmethod
