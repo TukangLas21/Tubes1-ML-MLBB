@@ -8,6 +8,7 @@ from modules.autograd import Tensor
 from modules.config import ModelConfig
 from modules.layer import Layer
 from modules.weightinit import Initializer
+from modules.rmsnorm import RMSNorm
 
 class FFNN:
     def __init__(self, config: ModelConfig, initializer: Initializer):
@@ -23,7 +24,11 @@ class FFNN:
             output_dim = self.config.layers_dims[i + 1]
             activation_fn = self.config.activation_fn[i]
             W = self.initializer.initialize((input_dim, output_dim))
-            layers.append(Layer(input_dim, output_dim, activation_fn, W))
+            if self.config.rmsnorm:
+                rmsnorm = RMSNorm(output_dim)
+                layers.append(Layer(input_dim, output_dim, activation_fn, W, rmsnorm))
+            else:
+                layers.append(Layer(input_dim, output_dim, activation_fn, W))
         return layers
     
     @overload
@@ -66,8 +71,11 @@ class FFNN:
             w_grad = layer.dW if layer.dW is not None else 0.0
             b_grad = layer.db if layer.db is not None else 0.0
 
-            layer.W.data = layer.W.data - lr * (w_grad + reg_grad)
-            layer.b.data = layer.b.data - lr * b_grad
+            layer.W.data -= lr * (w_grad + reg_grad)
+            layer.b.data -= lr * b_grad
+            
+            if layer.rmsnorm is not None and layer.rmsnorm.gamma.grad is not None:
+                layer.rmsnorm.gamma.data -= lr * layer.rmsnorm.gamma.grad
 
     def fit(
         self,
@@ -88,7 +96,7 @@ class FFNN:
         epoch_range = progress_bar if progress_bar is not None else range(epochs)
 
         for epoch in epoch_range:
-            # Shuffle
+            # shuffle
             idx = np.random.permutation(n)
             X_s, y_s = X_train[idx], y_train[idx]
 
@@ -97,10 +105,13 @@ class FFNN:
                 X_b = X_s[start:start + batch_size]
                 y_b = y_s[start:start + batch_size]
 
-                # Zero gradients from previous batch
+                # zero gradients from prev batch
                 for layer in self.layers:
                     layer.W.zero_grad()
                     layer.b.zero_grad()
+                    if layer.rmsnorm is not None:
+                        layer.rmsnorm.gamma.zero_grad()
+
                     layer.dW = None
                     layer.db = None
 
