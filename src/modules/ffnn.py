@@ -24,7 +24,7 @@ class FFNN:
             output_dim = self.config.layers_dims[i + 1]
             activation_fn = self.config.activation_fn[i]
             W = self.initializer.initialize((input_dim, output_dim))
-            if self.config.rmsnorm:
+            if self.config.rmsnorm and i != len(self.config.layers_dims) - 2: # except output layer
                 rmsnorm = RMSNorm(output_dim)
                 layers.append(Layer(input_dim, output_dim, activation_fn, W, rmsnorm))
             else:
