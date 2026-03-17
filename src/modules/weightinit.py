@@ -36,3 +36,59 @@ class RandomNormalInitializer(Initializer):
 
     def initialize(self, shape: tuple[int, ...]) -> np.ndarray:
         return np.random.normal(loc=self.mean, scale=self.std, size=shape)
+    
+
+# std = sqrt(2 / (nin + out))
+class XavierNormalInitializer(Initializer):
+    def __init__(self, mean=0.0, seed: int | None = 42):
+        super().__init__(seed)
+        self.mean = mean
+        
+    def initialize(self, shape):
+        n_in = shape[0]
+        n_out = shape[1]
+        
+        std = np.sqrt(2.0 / (n_in + n_out))
+        
+        return np.random.normal(loc=self.mean, scale=std, size=shape)
+        
+
+# x = sqrt(6 / (nin + nout)), uniform [-x, x]
+class XavierUniformInitializer(Initializer):
+    def __init__(self, seed: int | None = 42):
+        super().__init__(seed)
+
+    def initialize(self, shape):
+        n_in = shape[0]
+        n_out = shape[1]
+        
+        limit = np.sqrt(6.0 / (n_in + n_out))
+        
+        return np.random.uniform(-limit, limit, size=shape)
+    
+
+# std = sqrt(2 / nin)
+class HeNormalInitializer(Initializer):
+    def __init__(self, mean=0.0, seed: int | None = 42):
+        super().__init__(seed)
+        self.mean = mean
+        
+    def initialize(self, shape):
+        n_in = shape[0]
+        
+        std = np.sqrt(2.0 / n_in)
+        
+        return np.random.normal(loc=self.mean, scale=std, size=shape)
+    
+
+# x = sqrt(6 / nin)
+class HeUniformInitializer(Initializer):
+    def __init__(self, seed: int | None = 42):
+        super().__init__(seed)
+
+    def initialize(self, shape):
+        n_in = shape[0]
+        
+        limit = np.sqrt(6.0 / n_in)
+        
+        return np.random.uniform(-limit, limit, size=shape)

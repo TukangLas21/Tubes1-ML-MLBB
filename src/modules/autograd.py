@@ -39,8 +39,7 @@ class Tensor:
         return grad
 
     def __add__(self, other: Tensor) -> Tensor:
-        out = Tensor(self.data + other.data, requires_grad=self.requires_grad or other.requires_grad,
-                     _children=(self, other), _op='+')
+        out = Tensor(self.data + other.data, requires_grad=self.requires_grad or other.requires_grad, _children=(self, other), _op='+')
 
         def _backward():
             out_grad = out.grad
@@ -72,8 +71,7 @@ class Tensor:
         return other + (self * Tensor(-1))
 
     def __mul__(self, other: Tensor) -> Tensor:
-        out = Tensor(self.data * other.data, requires_grad=self.requires_grad or other.requires_grad,
-                     _children=(self, other), _op='*')
+        out = Tensor(self.data * other.data, requires_grad=self.requires_grad or other.requires_grad, _children=(self, other), _op='*')
 
         def _backward():
             out_grad = out.grad
@@ -98,8 +96,7 @@ class Tensor:
         return self * other
 
     def __truediv__(self, other: Tensor) -> Tensor:
-        out = Tensor(self.data / other.data, requires_grad=self.requires_grad or other.requires_grad,
-                     _children=(self, other), _op='/')
+        out = Tensor(self.data / other.data, requires_grad=self.requires_grad or other.requires_grad, _children=(self, other), _op='/')
 
         def _backward():
             out_grad = out.grad
@@ -127,8 +124,7 @@ class Tensor:
         return self * Tensor(-1)
 
     def __pow__(self, power: Tensor) -> Tensor:
-        out = Tensor(self.data ** power.data, requires_grad=self.requires_grad or power.requires_grad,
-                     _children=(self, power), _op='**')
+        out = Tensor(self.data ** power.data, requires_grad=self.requires_grad or power.requires_grad, _children=(self, power), _op='**')
 
         def _backward():
             out_grad = out.grad
@@ -156,8 +152,7 @@ class Tensor:
         return out
 
     def __matmul__(self, other: Tensor) -> Tensor:
-        out = Tensor(self.data @ other.data, requires_grad=self.requires_grad or other.requires_grad,
-                     _children=(self, other), _op='@')
+        out = Tensor(self.data @ other.data, requires_grad=self.requires_grad or other.requires_grad, _children=(self, other), _op='@')
 
         def _backward():
             out_grad = out.grad
@@ -180,8 +175,7 @@ class Tensor:
         return out
 
     def sum(self, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Tensor:
-        out = Tensor(self.data.sum(axis=axis, keepdims=keepdims), requires_grad=self.requires_grad,
-                     _children=(self,), _op='sum')
+        out = Tensor(self.data.sum(axis=axis, keepdims=keepdims), requires_grad=self.requires_grad, _children=(self,), _op='sum')
 
         def _backward():
             if self.requires_grad:
@@ -353,3 +347,29 @@ class Tensor:
 
     def zero_grad(self) -> None:
         self.grad = None
+        
+    def rmsnorm(self, eps: float = 1e-7) -> Tensor:
+        rms = np.sqrt(np.mean(self.data ** 2, axis=-1, keepdims=True) + eps)
+        
+        output_data = self.data / rms
+        output_tensor = Tensor(output_data, requires_grad=self.requires_grad, _children=(self,), _op='rmsnorm')
+        
+        def _backward():
+            if self.requires_grad:
+                output_grad = output_tensor.grad
+                
+                if output_grad is None:
+                    return 
+                
+                gradien = (1 / rms) * (output_grad - output_data * np.mean(output_grad * output_data, axis=-1, keepdims=True))
+                
+                if self.grad is None:
+                    self.grad = gradien.copy()
+                else:
+                    self.grad += gradien
+                    
+        output_tensor._backward = _backward
+        return output_tensor    
+                
+        
+        

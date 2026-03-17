@@ -2,10 +2,12 @@ import numpy as np
 
 from modules.activationfunction import ActivationFunction
 from modules.autograd import Tensor
+from modules.rmsnorm import RMSNorm
 
 
 class Layer:
-    def __init__(self, input_dim: int, output_dim: int, activation_fn: ActivationFunction, weights: np.ndarray):
+    def __init__(self, input_dim: int, output_dim: int, activation_fn: ActivationFunction, weights: np.ndarray, rmsnorm: RMSNorm=None):
+        self.rmsnorm = rmsnorm
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.activation_fn = activation_fn
@@ -22,6 +24,10 @@ class Layer:
     def forward(self, input_data: Tensor) -> Tensor:
         self.input = input_data
         self.z = self.input @ self.W + self.b
+        
+        if self.rmsnorm is not None:
+            self.z = self.rmsnorm.forward(self.z)
+            
         self.a = self.activation_fn.activate(self.z)
         return self.a
 
