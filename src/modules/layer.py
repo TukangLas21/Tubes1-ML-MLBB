@@ -31,7 +31,7 @@ class Layer:
         self.a = self.activation_fn.activate(self.z)
         return self.a
 
-    def backward(self) -> np.ndarray | None:
+    def backward(self, grad: np.ndarray | None = None) -> np.ndarray | None:
         self.dW = self.W.grad
         self.db = self.b.grad
 
